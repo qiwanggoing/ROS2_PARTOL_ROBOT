@@ -1,0 +1,9 @@
+/home/wangqi/Documents/ros2bookcode-master/chapt6/chapt6_ws/src/fishbot_description/build/fishbot_description/CMakeFiles/uninstall.dir
+/home/wangqi/Documents/ros2bookcode-master/chapt6/chapt6_ws/src/fishbot_description/build/fishbot_description/CMakeFiles/fishbot_description_uninstall.dir
+/home/wangqi/Documents/ros2bookcode-master/chapt6/chapt6_ws/src/fishbot_description/build/fishbot_description/CMakeFiles/test.dir
+/home/wangqi/Documents/ros2bookcode-master/chapt6/chapt6_ws/src/fishbot_description/build/fishbot_description/CMakeFiles/edit_cache.dir
+/home/wangqi/Documents/ros2bookcode-master/chapt6/chapt6_ws/src/fishbot_description/build/fishbot_description/CMakeFiles/rebuild_cache.dir
+/home/wangqi/Documents/ros2bookcode-master/chapt6/chapt6_ws/src/fishbot_description/build/fishbot_description/CMakeFiles/list_install_components.dir
+/home/wangqi/Documents/ros2bookcode-master/chapt6/chapt6_ws/src/fishbot_description/build/fishbot_description/CMakeFiles/install.dir
+/home/wangqi/Documents/ros2bookcode-master/chapt6/chapt6_ws/src/fishbot_description/build/fishbot_description/CMakeFiles/install/local.dir
+/home/wangqi/Documents/ros2bookcode-master/chapt6/chapt6_ws/src/fishbot_description/build/fishbot_description/CMakeFiles/install/strip.dir
