@@ -13,6 +13,9 @@ def generate_launch_description():
     action_declare_arg_mode_path = launch.actions.DeclareLaunchArgument(
         name='model', default_value=str(default_model_path),
         description='URDF 的绝对路径')
+    use_sim_time = launch.substitutions.LaunchConfiguration('use_sim_time')
+    gui = launch.substitutions.LaunchConfiguration('gui')
+    world = launch.substitutions.LaunchConfiguration('world')
     # 获取文件内容生成新的参数
     robot_description = launch_ros.parameter_descriptions.ParameterValue(
         launch.substitutions.Command(
@@ -22,7 +25,8 @@ def generate_launch_description():
     robot_state_publisher_node = launch_ros.actions.Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
-        parameters=[{'robot_description': robot_description}]
+        parameters=[{'robot_description': robot_description,
+                     'use_sim_time': use_sim_time}]
     )
 
     # 通过 IncludeLaunchDescription 包含另外一个 launch 文件
@@ -30,7 +34,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource([get_package_share_directory(
             'gazebo_ros'), '/launch', '/gazebo.launch.py']),
       	# 传递参数
-        launch_arguments=[('world', default_world_path),('verbose','true')]
+        launch_arguments={'world': world, 'verbose': 'true', 'gui': gui}.items()
     )
     # 请求 Gazebo 加载机器人
     spawn_entity_node = launch_ros.actions.Node(
@@ -40,10 +44,11 @@ def generate_launch_description():
                    '-entity', robot_name_in_model, ])
     
     # 加载并激活 fishbot_joint_state_broadcaster 控制器
-    action_load_joint_state_controller = launch.actions.ExecuteProcess(
-        # cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
-        #     'fishbot_joint_state_broadcaster'],
-        cmd='ros2 control load_controller fishbot_joint_state_broadcaster --set-state active'.split(' '),
+    action_load_joint_state_controller = launch_ros.actions.Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['fishbot_joint_state_broadcaster',
+                   '--controller-manager-timeout', '60'],
         output='screen'
     )
 
@@ -52,12 +57,18 @@ def generate_launch_description():
     #     cmd=['ros2', 'control', 'load_controller', '--set-state', 'active','fishbot_effort_controller'], 
     #     output='screen')
     
-    load_fishbot_diff_drive_controller = launch.actions.ExecuteProcess(
-        cmd=['ros2', 'control', 'load_controller', '--set-state', 'active','fishbot_diff_drive_controller'], 
+    load_fishbot_diff_drive_controller = launch_ros.actions.Node(
+        package='controller_manager',
+        executable='spawner',
+        arguments=['fishbot_diff_drive_controller',
+                   '--controller-manager-timeout', '60'],
         output='screen')
     
     return launch.LaunchDescription([
         action_declare_arg_mode_path,
+        launch.actions.DeclareLaunchArgument('use_sim_time', default_value='true'),
+        launch.actions.DeclareLaunchArgument('gui', default_value='true'),
+        launch.actions.DeclareLaunchArgument('world', default_value=default_world_path),
         robot_state_publisher_node,
         launch_gazebo,
         spawn_entity_node,

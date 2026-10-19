@@ -1,0 +1,24 @@
+name: ros2_patrol
+channels:
+  - robostack-humble
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12
+  - ros-humble-ros-base
+  - ros-humble-nav2-bringup
+  - ros-humble-nav2-simple-commander
+  - ros-humble-gazebo-ros-pkgs
+  - ros-humble-gazebo-ros2-control
+  - ros-humble-diff-drive-controller
+  - ros-humble-joint-state-broadcaster
+  - ros-humble-xacro
+  - ros-humble-robot-state-publisher
+  - ros-humble-rviz2
+  - ros-humble-tf-transformations
+  # Humble's ament_python uses the classic setuptools develop interface.
+  - setuptools<80
+  - colcon-common-extensions
+  - cmake
+  - make
+  - pkg-config

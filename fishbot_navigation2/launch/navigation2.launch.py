@@ -29,6 +29,8 @@ def generate_launch_description():
                                              description='Full path to map file to load'),
         launch.actions.DeclareLaunchArgument('params_file', default_value=nav2_param_path,
                                              description='Full path to param file to load'),
+        launch.actions.DeclareLaunchArgument('use_rviz', default_value='true',
+                                             description='Start the RViz navigation interface'),
 
         launch.actions.IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
@@ -40,6 +42,8 @@ def generate_launch_description():
                 'params_file': nav2_param_path}.items(),
         ),
         launch_ros.actions.Node(
+            condition=launch.conditions.IfCondition(
+                launch.substitutions.LaunchConfiguration('use_rviz')),
             package='rviz2',
             executable='rviz2',
             name='rviz2',
