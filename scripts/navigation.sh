@@ -2,16 +2,22 @@
 # Run in a clean Humble environment even when the calling shell uses Foxy.
 set -eo pipefail
 project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-patrol_env="${PATROL_CONDA_PREFIX:-/var/tmp/qiwang/conda/envs/ros2_patrol}"
-conda_root="${PATROL_CONDA_ROOT:-/home/qiwang/miniconda3}"
-if [[ ! -f "$patrol_env/conda-meta/history" ]]; then
-    echo "Missing environment: $patrol_env (see environment.navigation.yml)" >&2
+# Set these paths to your Conda installation and ros2_patrol environment.
+conda_root="${PATROL_CONDA_ROOT:-$HOME/miniconda3}"
+patrol_env="${PATROL_CONDA_PREFIX:-$conda_root/envs/ros2_patrol}"
+if [[ ! -f "$conda_root/etc/profile.d/conda.sh" ]]; then
+    echo "Invalid Conda installation: $conda_root" >&2
     exit 1
 fi
 unset AMENT_PREFIX_PATH CMAKE_PREFIX_PATH COLCON_PREFIX_PATH PYTHONPATH
 unset ROS_DISTRO ROS_VERSION ROS_PYTHON_VERSION LD_LIBRARY_PATH
 unset GAZEBO_PLUGIN_PATH GAZEBO_MODEL_PATH GAZEBO_RESOURCE_PATH
 source "$conda_root/etc/profile.d/conda.sh"
+if [[ ! -f "$patrol_env/conda-meta/history" ]]; then
+    echo "Environment not found: $patrol_env. See docs/USAGE.md." >&2
+    echo "Set conda_root and patrol_env at the top of scripts/navigation.sh." >&2
+    exit 1
+fi
 conda activate "$patrol_env"
 export ROS_LOG_DIR="$project_dir/log/ros"
 export GAZEBO_MODEL_DATABASE_URI=""
