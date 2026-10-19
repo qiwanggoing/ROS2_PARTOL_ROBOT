@@ -7,6 +7,14 @@
   <img src="docs/images/navigation_rviz.jpg" width="48%" alt="RViz 导航地图与路径">
 </p>
 
+### 导航演示视频
+
+点击动态预览查看完整视频（约 17 秒，MP4）：
+
+[![RViz 地图与机器人导航演示](docs/images/navigation_preview.gif)](Navigation.mp4)
+
+[观看或下载完整导航视频](Navigation.mp4)
+
 ## 1. 快速启动：直接看导航效果
 
 **本机环境已安装，导航包已编译。** 打开终端，进入项目目录：
