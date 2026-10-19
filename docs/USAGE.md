@@ -1,98 +1,98 @@
-# 安装与使用
+# Installation and Usage
 
-本文从首次下载项目开始。所有操作均在 Linux x86_64 的终端中进行；图形演示需要桌面会话。
+This guide starts with a fresh download. Run the commands in a Linux x86_64 terminal. Graphical demonstrations require a desktop session.
 
-## 1. 下载项目与准备环境
+## 1. Download and Environment Setup
 
-准备 Git、Conda（Miniconda 或 Miniforge）和 C/C++ 构建工具。Ubuntu 可安装构建工具：
+Install Git, Conda (Miniconda or Miniforge), and C/C++ build tools. On Ubuntu, install the build tools with:
 
 ```bash
 sudo apt update
 sudo apt install git build-essential
 ```
 
-安装并初始化 Conda 后，重新打开终端，下载项目：
+After installing and initializing Conda, open a new terminal and download the project:
 
 ```bash
 git clone https://github.com/qiwanggoing/ROS2_PARTOL_ROBOT.git
 cd ROS2_PARTOL_ROBOT
 ```
 
-通过 [environment.navigation.yml](../environment.navigation.yml) 创建独立环境：
+Create an isolated environment using [environment.navigation.yml](../environment.navigation.yml):
 
 ```bash
 conda env create --file environment.navigation.yml
 conda activate ros2_patrol
 ```
 
-环境提供 ROS 2 Humble、Gazebo Classic 11、Nav2 和 RViz；宿主系统无需另外安装 ROS。ROS 的 Conda 分发方式见 [RoboStack 文档](https://robostack.github.io/GettingStarted.html)。环境文件中的 `setuptools<80` 用于兼容 Humble 的 Python 包构建工具。
+The environment provides ROS 2 Humble, Gazebo Classic 11, Nav2, and RViz. A separate system ROS installation is unnecessary. See the [RoboStack documentation](https://robostack.github.io/GettingStarted.html) for ROS packages distributed through Conda. The `setuptools<80` constraint maintains compatibility with Humble's Python build tools.
 
-如果默认磁盘空间不足，可选择有权限、空间充足的持久目录，例如：
+If the default disk has insufficient space, choose a persistent directory with enough free space and write permission, for example:
 
 ```bash
 conda env create --prefix "$HOME/conda-envs/ros2_patrol" --file environment.navigation.yml
 conda activate "$HOME/conda-envs/ros2_patrol"
 ```
 
-使用自定义目录时，下文的 `conda install --name ros2_patrol` 相应替换为 `conda install --prefix "环境的完整路径"`。
+For a custom directory, replace subsequent `conda install --name ros2_patrol` commands with `conda install --prefix "/full/path/to/environment"`.
 
-## 2. 构建并启动导航
+## 2. Configure Paths, Build, and Launch
 
-先查看 Conda 和环境的安装路径：
+Check the installation paths:
 
 ```bash
 conda info --base
 conda env list
 ```
 
-打开 [scripts/navigation.sh](../scripts/navigation.sh)，修改顶部的 `conda_root` 和 `patrol_env`。可以直接将这两行替换为：
+Open [scripts/navigation.sh](../scripts/navigation.sh) and edit `conda_root` and `patrol_env` near the top. You can replace those two lines with:
 
 ```bash
-conda_root="/你的/Conda安装目录"
-patrol_env="/你的/ros2_patrol环境目录"
+conda_root="/path/to/your/conda/installation"
+patrol_env="/path/to/your/ros2_patrol/environment"
 ```
 
-`conda_root` 填 `conda info --base` 的输出；`patrol_env` 填 `conda env list` 中 `ros2_patrol` 对应的完整路径。保存后，在项目根目录执行：
+Set `conda_root` to the output of `conda info --base`. Set `patrol_env` to the full path listed for `ros2_patrol` by `conda env list`. Save the file, then run these commands from the project root:
 
 ```bash
 bash scripts/navigation.sh build
 bash scripts/navigation.sh demo
 ```
 
-脚本使用你填写的路径激活环境并加载项目。每个新终端先进入项目目录，再运行对应命令即可；更换环境位置时重新修改这两项。
+The script activates the environment at the paths you supplied and loads the project. In each new terminal, enter the project directory before running commands. Update the two paths if you relocate or recreate the environment elsewhere.
 
-首次启动后：
+After startup:
 
-1. 等待 Gazebo 出现机器人、RViz 出现地图。
-2. 在 RViz 点击 **2D Pose Estimate**，将初始位置设为 `(0, 0)`，朝向 `+x`。
-3. 点击 **Nav2 Goal**，在可通行区域拖出目标位置和朝向。
-4. 查看机器人运动和规划路径；`Goal succeeded` 表示导航成功。
-5. 在启动终端按 `Ctrl+C` 退出，等待进程结束后再重启。
+1. Wait for the robot to appear in Gazebo and the map to appear in RViz.
+2. Click **2D Pose Estimate** in RViz and set the initial position to `(0, 0)`, facing `+x`.
+3. Click **Nav2 Goal** and drag in free space to select a destination and heading.
+4. Observe the robot and planned path. `Goal succeeded` indicates successful navigation.
+5. Press `Ctrl+C` in the launch terminal to stop. Wait for its processes to exit before restarting.
 
-机器人已经移动时，定位应使用当前真实位置。`2D Pose Estimate` 调整定位估计，不会改变 Gazebo 中的实际位置。
+If the robot has moved, initialize localization at its actual current pose. **2D Pose Estimate** changes the localization estimate; it does not move the robot in Gazebo.
 
-项目默认运行导航模块。遥控、建图、循环巡逻和相机查看的使用方法见下文；各扩展的依赖在对应章节安装。
+The default launch runs navigation. Install optional dependencies for keyboard control, mapping, repeated patrols, and camera viewing as described in their sections below.
 
-所有后续命令均在项目根目录执行。`build/`、`install/`、`log/` 由构建或运行生成，首次下载时无需预先存在。不要混合加载其他版本的 ROS 环境；包装脚本会清理冲突路径。
+Run all subsequent commands from the project root. The build and runtime commands generate `build/`, `install/`, and `log/`; these directories need not exist in a fresh download. Avoid mixing different ROS environments. The wrapper clears conflicting paths.
 
-## 3. 启动方式与导航操作
+## 3. Launch Options and Navigation
 
-### 3.1 常用启动命令
+### 3.1 Common Commands
 
-| 操作 | 命令 |
+| Task | Command |
 | --- | --- |
-| 编译导航相关的三个包 | `bash scripts/navigation.sh build` |
-| 同时打开 Gazebo、Nav2、RViz | `bash scripts/navigation.sh demo` |
-| 完全无界面运行 | `bash scripts/navigation.sh demo gui:=false use_rviz:=false` |
-| 只运行仿真 | `bash scripts/navigation.sh sim` |
-| 只运行导航和 RViz | `bash scripts/navigation.sh nav` |
-| 列出启动参数 | `bash scripts/navigation.sh ros2 launch fishbot_navigation2 simulation.launch.py --show-args` |
+| Build the three navigation packages | `bash scripts/navigation.sh build` |
+| Start Gazebo, Nav2, and RViz together | `bash scripts/navigation.sh demo` |
+| Run without graphical windows | `bash scripts/navigation.sh demo gui:=false use_rviz:=false` |
+| Start simulation only | `bash scripts/navigation.sh sim` |
+| Start navigation and RViz only | `bash scripts/navigation.sh nav` |
+| List launch arguments | `bash scripts/navigation.sh ros2 launch fishbot_navigation2 simulation.launch.py --show-args` |
 
-分开启动时，在两个终端分别运行 `sim` 和 `nav`。一键 `demo` 已包含这两部分。
+To launch separately, run `sim` and `nav` in two terminals. The combined `demo` command includes both.
 
-默认房间为 `fishbot_description/world/custom_room.world`，地图为 `fishbot_navigation2/maps/room.yaml`，导航参数为 `fishbot_navigation2/config/nav2_params.yaml`。
+The default world is `fishbot_description/world/custom_room.world`, the map is `fishbot_navigation2/maps/room.yaml`, and the navigation parameters are in `fishbot_navigation2/config/nav2_params.yaml`.
 
-加载其他地图或参数：
+To use another map or parameter file:
 
 ```bash
 bash scripts/navigation.sh demo \
@@ -100,30 +100,30 @@ bash scripts/navigation.sh demo \
   params_file:="$PWD/fishbot_navigation2/config/nav2_params.yaml"
 ```
 
-### 3.2 RViz 中看什么
+### 3.2 RViz Displays
 
-- **Map**：静态房间地图；全局坐标系设为 `map`。
-- **RobotModel**：机器人模型，描述来自 `/robot_description`。
-- **LaserScan**：选择 `/scan`，显示机器人探测到的障碍物。
-- **Global/Local Costmap**：显示导航使用的障碍物和膨胀区域。
-- **Path**：全局路径通常为 `/plan`，局部路径为 `/local_plan`。
-- **2D Pose Estimate**：校正机器人的地图位置与朝向。
-- **Nav2 Goal**：选择导航终点和最终朝向。
+- **Map:** the room map; set the global Fixed Frame to `map`.
+- **RobotModel:** the robot model from `/robot_description`.
+- **LaserScan:** select `/scan` to display detected obstacles.
+- **Global/Local Costmap:** obstacles and the inflated regions used by navigation.
+- **Path:** the global path is usually `/plan`, and the local path is `/local_plan`.
+- **2D Pose Estimate:** set or correct the robot's map position and heading.
+- **Nav2 Goal:** select a destination and final heading.
 
-Nav2 默认 RViz 配置会预设主要显示项。如果机器人或激光没有显示，先完成定位，再检查对应话题和 Fixed Frame。
+The default Nav2 RViz configuration includes the main displays. If the robot or scans are missing, initialize localization and check the selected topics and Fixed Frame.
 
-### 3.3 用命令初始化定位、发送目标
+### 3.3 Initialize Localization and Send a Goal
 
-刚启动、机器人仍在原点时，可用程序初始化定位：
+After a fresh startup, while the robot remains at the origin:
 
 ```bash
 bash scripts/navigation.sh ros2 run fishbot_application init_robot_pose \
   --ros-args -p use_sim_time:=true
 ```
 
-该节点初始化 `(0, 0, 0)` 后持续运行，可保留在单独终端；按 `Ctrl+C` 结束此节点不会清除 AMCL 已建立的定位。
+This node initializes `(0, 0, 0)` and keeps running. Leave it in a separate terminal or stop it with `Ctrl+C`; stopping this node does not clear AMCL's established localization.
 
-定位就绪后，在另一终端发送 `(2, 1)` 米目标：
+Once localization is ready, send a goal at `(2, 1)` meters from another terminal:
 
 ```bash
 bash scripts/navigation.sh ros2 action send_goal \
@@ -132,26 +132,26 @@ bash scripts/navigation.sh ros2 action send_goal \
   --feedback
 ```
 
-代码中的单点导航示例也使用同一目标：
+The single-goal example uses the same destination:
 
 ```bash
 bash scripts/navigation.sh ros2 run fishbot_application nav_to_pose \
   --ros-args -p use_sim_time:=true
 ```
 
-目标坐标位于 `map` 坐标系，长度单位为米；`orientation.w: 1.0` 表示朝向 `+x`。修改示例程序中的目标后重新运行构建命令。
+Goals use the `map` frame and meter units. `orientation.w: 1.0` faces `+x`. Rebuild after changing a goal in the example source.
 
-### 3.4 自动检查导航
+### 3.4 Automated Navigation Check
 
-先启动一套新仿真，再在另一终端执行：
+Start a fresh simulation, then run this in another terminal:
 
 ```bash
 bash scripts/navigation.sh check --x 2.0 --y 1.0
 ```
 
-脚本检查有效激光、仿真时钟、里程计、AMCL 和 Nav2 状态，初始化定位并发送目标；成功条件包含 Nav2 成功状态、定位终点误差不超过 0.25 m，以及有效激光和非零速度指令。
+The script checks valid laser scans, simulation time, odometry, AMCL, and Nav2 readiness. It initializes localization and sends a goal. Success requires a successful Nav2 result, a final localized position error within 0.25 m, valid laser scans, and nonzero velocity commands.
 
-可配置目标朝向、超时、报告位置和初始真实位姿：
+You can set the goal heading, timeout, report location, and actual initial pose:
 
 ```bash
 bash scripts/navigation.sh check \
@@ -161,24 +161,24 @@ bash scripts/navigation.sh check \
   --output log/navigation_check.json
 ```
 
-角度单位为弧度。机器人已经移动时，应把 `--initial-*` 改为真实当前位置，或先重启仿真。
+Angles are in radians. If the robot has moved, supply its actual current pose through `--initial-*`, or restart the simulation first.
 
-### 3.5 查询机器人位置
+### 3.5 Read the Robot Pose
 
 ```bash
 bash scripts/navigation.sh ros2 run fishbot_application get_robot_pose \
   --ros-args -p use_sim_time:=true
 ```
 
-程序打印 `map → base_footprint` 平移、四元数与欧拉角。也可直接查看 TF：
+This example prints the translation, quaternion, and Euler angles for `map → base_footprint`. You can also inspect the transform directly:
 
 ```bash
 bash scripts/navigation.sh ros2 run tf2_ros tf2_echo map base_footprint
 ```
 
-## 4. 键盘遥控
+## 4. Keyboard Control
 
-使用键盘遥控前，先安装遥控包：
+Install the keyboard control package:
 
 ```bash
 conda install \
@@ -187,55 +187,55 @@ conda install \
   ros-humble-teleop-twist-keyboard
 ```
 
-启动仿真后，在单独终端运行：
+With the simulation running, start keyboard control in a separate terminal:
 
 ```bash
 bash scripts/navigation.sh ros2 run teleop_twist_keyboard teleop_twist_keyboard \
   --ros-args -p speed:=0.15 -p turn:=0.5
 ```
 
-键盘焦点要放在遥控终端：`i` 前进，`,` 后退，`j/l` 转向，`k` 停止；其他组合键以终端提示为准。遥控发布到 `/cmd_vel`。
+Keep keyboard focus in that terminal. Use `i` to move forward, `,` to reverse, `j/l` to turn, and `k` to stop. Follow the terminal instructions for other combinations. Commands are published on `/cmd_vel`.
 
-手动驾驶前先取消正在执行的导航任务，确保底盘同一时刻只有一个运动指令来源。建图时可以只启动 `sim`，然后使用遥控。
+Cancel any active navigation task before manual driving so that one source controls the base at a time. For mapping, start only `sim` and then use keyboard control.
 
-## 5. SLAM 建图、保存地图与切换导航
+## 5. Build, Save, and Use a Map
 
-先安装建图依赖：
+Install the mapping dependency:
 
 ```bash
 conda install --name ros2_patrol --override-channels \
   -c robostack-humble -c conda-forge ros-humble-slam-toolbox
 ```
 
-启动前停止已有的 `demo` 或 `nav`，随后分别在几个终端执行。
+Stop any existing `demo` or `nav` launch before following these steps in separate terminals.
 
-**终端 1：启动仿真。**
+**Terminal 1: start simulation.**
 
 ```bash
 bash scripts/navigation.sh sim
 ```
 
-**终端 2：启动 SLAM。**
+**Terminal 2: start SLAM.**
 
 ```bash
 bash scripts/navigation.sh ros2 launch slam_toolbox online_async_launch.py \
   use_sim_time:=true
 ```
 
-安装版本的默认 SLAM 配置使用 `base_footprint`、`odom`、`map` 和 `/scan`，与当前机器人一致。自定义配置时，可通过 `slam_params_file:=/absolute/path/to/slam.yaml` 传入。[SLAM 与 Nav2 的配置说明](https://docs.nav2.org/rolling/configuration_and_development/first_time_robot_setup_guide/sensors/mapping_localization/)
+The installed SLAM defaults use `base_footprint`, `odom`, `map`, and `/scan`, matching this robot. To use a custom configuration, pass `slam_params_file:=/absolute/path/to/slam.yaml`. See the [Nav2 mapping and localization guide](https://docs.nav2.org/rolling/configuration_and_development/first_time_robot_setup_guide/sensors/mapping_localization/).
 
-**终端 3：打开 RViz。**
+**Terminal 3: open RViz.**
 
 ```bash
 bash scripts/navigation.sh ros2 run rviz2 rviz2 \
   --ros-args -p use_sim_time:=true
 ```
 
-将 Fixed Frame 设为 `map`，添加 `Map`（`/map`）、`LaserScan`（`/scan`）、`RobotModel` 和 `TF`。
+Set Fixed Frame to `map`. Add `Map` (`/map`), `LaserScan` (`/scan`), `RobotModel`, and `TF` displays.
 
-**终端 4：按第 4 节启动键盘遥控。** 缓慢绕房间行驶，让激光覆盖通道和障碍物。
+**Terminal 4: start keyboard control as described in Section 4.** Drive slowly around the room so that laser scans cover passages and obstacles.
 
-**终端 5：保存地图。** 等待 RViz 中地图形成后执行：
+**Terminal 5: save the map.** Once the map is visible in RViz:
 
 ```bash
 mkdir -p log/maps
@@ -243,40 +243,40 @@ bash scripts/navigation.sh ros2 run nav2_map_server map_saver_cli \
   -f "$PWD/log/maps/room_new" --ros-args -p use_sim_time:=true
 ```
 
-生成 `room_new.yaml` 及地图图像，图像扩展名由保存器配置决定。导航时传入 YAML 文件路径。
+This produces `room_new.yaml` and a map image. The image extension depends on the saver settings. Supply the YAML path when launching navigation.
 
-建图完成后，停止 SLAM 和遥控，保留仿真，然后启动已知地图导航：
+When mapping is complete, stop SLAM and keyboard control, leave simulation running, and start navigation on the saved map:
 
 ```bash
 bash scripts/navigation.sh nav map:="$PWD/log/maps/room_new.yaml"
 ```
 
-在 RViz 用 **2D Pose Estimate** 设置机器人当前真实位置，再发送导航目标。SLAM 和 AMCL 都会发布 `map → odom`，切换时应只保留当前模式对应的定位来源。
+Use **2D Pose Estimate** in RViz to set the robot's actual current pose, then send a navigation goal. SLAM and AMCL both publish `map → odom`; run only the localization source for the selected mode.
 
-## 6. 单次多点导航
+## 6. Waypoint Navigation
 
-先启动 `demo` 并完成初始定位，然后执行：
+Start `demo`, initialize localization, and run:
 
 ```bash
 bash scripts/navigation.sh ros2 run fishbot_application waypoint_follower \
   --ros-args -p use_sim_time:=true
 ```
 
-[waypoint_follower.py](../fishbot_application/fishbot_application/waypoint_follower.py) 中的默认路线为：
+The default route in [waypoint_follower.py](../fishbot_application/fishbot_application/waypoint_follower.py) is:
 
 ```text
 (2.0, 1.0, 0.0) → (0.0, 1.0, 0.0) → (0.0, 0.0, 0.0)
 ```
 
-每组为 `(x, y, yaw)`，单位为米和弧度。程序调用 Nav2 `FollowWaypoints`，依次执行一轮并打印路点进度与任务结果。更改路线时修改程序中的各个 `PoseStamped`，随后执行 `bash scripts/navigation.sh build`。
+Each tuple is `(x, y, yaw)` in meters and radians. The example calls Nav2 `FollowWaypoints`, runs the route once, and prints waypoint progress and the result. To change the route, edit its `PoseStamped` objects and run `bash scripts/navigation.sh build`.
 
-## 7. 循环巡逻、语音播报和到点拍照
+## 7. Repeated Patrols, Speech, and Image Capture
 
-### 7.1 运行逻辑与额外依赖
+### 7.1 Workflow and Dependencies
 
-`autopartol_robot` 的巡逻逻辑为：播报准备初始化 → 设置初始位姿 → 逐个访问路点 → 每站播报并保存图像 → 重复整条路线，直到停止程序。
+The `autopartol_robot` workflow announces initialization, sets the initial pose, visits each waypoint, announces arrival, captures an image, and repeats the route until stopped.
 
-循环巡逻需要额外的图像与语音依赖，以及 `autopartol_interfaces`、`autopartol_robot` 两个包。先安装依赖，再按下一节编译：
+This workflow requires image and speech dependencies, plus the `autopartol_interfaces` and `autopartol_robot` packages. Install dependencies first, then build the packages in the next section:
 
 ```bash
 conda install --name ros2_patrol --override-channels \
@@ -284,26 +284,26 @@ conda install --name ros2_patrol --override-channels \
   ros-humble-cv-bridge ros-humble-tf-transformations opencv
 ```
 
-在普通终端安装语音依赖：
+Install the speech dependencies:
 
 ```bash
 sudo apt install espeak-ng
 bash scripts/navigation.sh python -m pip install espeakng
 ```
 
-本项目使用 `espeakng.Speaker()`，对应 [espeakng Python 绑定](https://pypi.org/project/espeakng/)。安装后检查 API 和语音引擎：
+The project uses `espeakng.Speaker()` from the [espeakng Python bindings](https://pypi.org/project/espeakng/). Check the API and speech engine:
 
 ```bash
 bash scripts/navigation.sh python -c "import espeakng; print(espeakng.Speaker)"
 espeak-ng --voices
-espeak-ng -v zh '巡逻机器人语音测试'
+espeak-ng -v en 'Patrol robot speech test'
 ```
 
-声音输出需要可用的音频设备。巡逻、语音与拍照的完整流程仍需联调。
+Speech requires an available audio output device. The combined patrol, speech, and image capture workflow still requires integration testing.
 
-### 7.2 编译巡逻接口和节点
+### 7.2 Build the Patrol Interface and Nodes
 
-先按第 2 节构建导航，再执行：
+Build navigation as described in Section 2, then run:
 
 ```bash
 bash scripts/navigation.sh colcon build \
@@ -312,11 +312,11 @@ bash scripts/navigation.sh colcon build \
   -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 ```
 
-后续每次通过包装脚本启动程序时，都会重新加载构建后的工作空间。
+Each subsequent wrapper invocation loads the updated workspace.
 
-### 7.3 配置巡逻路线与照片目录
+### 7.3 Configure the Route and Image Directory
 
-参考配置为 [partol_config.yaml](../autopartol_robot/config/partol_config.yaml)。原配置的 `use_sim_time` 为 `false`，仿真中应使用 `true`。建议建立独立配置文件：
+See [partol_config.yaml](../autopartol_robot/config/partol_config.yaml) for the original configuration. Its `use_sim_time` value is `false`; use `true` for simulation. Create a separate configuration file:
 
 ```bash
 mkdir -p log/patrol_images
@@ -330,72 +330,72 @@ cat > log/partol_config.yaml <<EOF
 EOF
 ```
 
-| 参数 | 含义 |
+| Parameter | Meaning |
 | --- | --- |
-| `initial_point` | 启动时机器人真实的 `[x, y, yaw]` |
-| `target_points` | 按 `x, y, yaw` 三个数一组排列的路点列表，长度应为 3 的倍数 |
-| `img_save_path` | 已存在的照片目录；当前代码直接拼接文件名，因此路径末尾必须有 `/` |
-| `use_sim_time` | Gazebo 仿真中设为 `true` |
+| `initial_point` | The robot's actual starting `[x, y, yaw]`. |
+| `target_points` | A flat list of waypoints in `x, y, yaw` groups; its length must be a multiple of three. |
+| `img_save_path` | An existing image directory. Include a trailing `/` because the code appends filenames directly. |
+| `use_sim_time` | Set to `true` for Gazebo simulation. |
 
-照片命名为 `img_<x>_<y>.png`，坐标保留两位小数。同一坐标重复拍照会覆盖同名文件。
+Images are named `img_<x>_<y>.png`, with coordinates rounded to two decimal places. Repeated captures at the same coordinates overwrite the corresponding file.
 
-### 7.4 启动语音与巡逻
+### 7.4 Start Speech and Patrol
 
-先启动一套新的 `demo`，让机器人保持在与 `initial_point` 一致的位置。
+Start a fresh `demo` and keep the robot at the pose specified by `initial_point`.
 
-**终端 2：启动语音服务。**
+**Terminal 2: start the speech service.**
 
 ```bash
 bash scripts/navigation.sh ros2 run autopartol_robot speaker
 ```
 
-可在另一终端单独测试服务：
+Test the service independently from another terminal:
 
 ```bash
 bash scripts/navigation.sh ros2 service call \
   /speech_text autopartol_interfaces/srv/SpeechText \
-  "{text: '机器人准备开始巡逻'}"
+  "{text: 'Robot ready to begin patrol'}"
 ```
 
-接口见 [SpeechText.srv](../autopartol_interfaces/srv/SpeechText.srv)：请求为 `string text`，响应为 `bool result`。
+[SpeechText.srv](../autopartol_interfaces/srv/SpeechText.srv) defines a `string text` request and a `bool result` response.
 
-**终端 3：启动巡逻节点。**
+**Terminal 3: start the patrol node.**
 
 ```bash
 bash scripts/navigation.sh ros2 run autopartol_robot partol_node \
   --ros-args --params-file "$PWD/log/partol_config.yaml"
 ```
 
-巡逻节点会自行初始化定位。保持语音服务在线；代码会等待 `/speech_text` 服务，并依次等待播报完成。
+The patrol node initializes localization. Keep the speech service running: the code waits for `/speech_text` and for each announcement to complete.
 
-原有合并启动入口也保留在仓库中：
+The original combined launch is also available:
 
 ```bash
 bash scripts/navigation.sh ros2 launch autopartol_robot autopartol.launch.py
 ```
 
-该入口固定读取包内 `config/partol_config.yaml`。使用它之前，应修改源码配置中的仿真时间、路线、初始位置和照片目录，并重新编译 `autopartol_robot`。它不会读取上面另建的 `log/partol_config.yaml`。
+It reads the package's `config/partol_config.yaml`. Before using it, update simulation time, the route, the initial pose, and the image directory in that source configuration, then rebuild `autopartol_robot`. This launch does not read the separate `log/partol_config.yaml` created above.
 
-### 7.5 使用时检查任务结果
+### 7.5 Check Task and Image Results
 
-当前巡逻代码在导航结束后直接播报到达和拍照，没有按 `TaskResult` 区分成功、失败和取消；评估到达结果时应同时检查 Nav2 的任务状态。代码也会在尚未收到相机帧时跳过保存。语音提示“图像记录完成”之后，请检查照片目录是否实际生成文件。
+The patrol code announces arrival and captures an image after navigation ends without distinguishing successful, failed, or canceled `TaskResult` values. Check the Nav2 result when assessing arrival. Image saving is skipped if no camera frame has arrived, so verify that files were created after an image capture announcement.
 
-停止时先在巡逻终端按 `Ctrl+C`，并在 RViz 确认取消仍在执行的导航目标，再停止语音和仿真。结束导航客户端进程不保证服务器上的目标自动取消。
+To stop, press `Ctrl+C` in the patrol terminal and cancel any active navigation goal in RViz before stopping speech and simulation. Exiting a navigation client does not guarantee that its server-side goal is canceled.
 
-## 8. 相机与传感器查看
+## 8. Camera and Sensor Viewing
 
-### 8.1 在 RViz 看图像
+### 8.1 View Images in RViz
 
-仿真启动后，在 RViz 添加 **Image**，选择 `/camera_sensor/image_raw`。也可添加深度图或点云显示；以当前发布的话题为准：
+With simulation running, add an **Image** display and select `/camera_sensor/image_raw`. You can also display depth images and point clouds. Check the published topics:
 
 ```bash
 bash scripts/navigation.sh ros2 topic list -t
 bash scripts/navigation.sh ros2 topic info /camera_sensor/image_raw -v
 ```
 
-### 8.2 独立图像查看器
+### 8.2 Standalone Image Viewer
 
-查看相机图像时，按需安装查看器：
+Install the optional viewer:
 
 ```bash
 conda install \
@@ -404,50 +404,50 @@ conda install \
   ros-humble-rqt-image-view
 ```
 
-启动后在下拉框中选择图像话题：
+Launch it and choose an image topic from the dropdown:
 
 ```bash
 bash scripts/navigation.sh ros2 run rqt_image_view rqt_image_view
 ```
 
-### 8.3 关键话题和坐标系
+### 8.3 Main Topics and Frames
 
-| 名称 | 类型 / 用途 |
+| Name | Type or purpose |
 | --- | --- |
-| `/clock` | Gazebo 仿真时间 |
-| `/robot_description` | 机器人 URDF 描述 |
-| `/joint_states` | 轮关节状态 |
-| `/cmd_vel` | `geometry_msgs/msg/Twist`，底盘速度指令 |
-| `/odom` | `nav_msgs/msg/Odometry`，底盘里程计 |
-| `/scan` | `sensor_msgs/msg/LaserScan`，二维激光 |
-| `/imu` | IMU 数据 |
-| `/map` | `nav_msgs/msg/OccupancyGrid`，地图 |
-| `/amcl_pose` | AMCL 定位结果 |
-| `/camera_sensor/image_raw` | RGB 相机图像，巡逻拍照订阅源 |
-| `/camera_sensor/depth/image_raw` | 深度图；用 `topic list -t` 确认实际话题 |
-| `/camera_sensor/points` | 深度相机点云 |
-| `/navigate_to_pose` | 单目标导航 Action |
-| `/follow_waypoints` | 多路点导航 Action |
-| `/speech_text` | 巡逻语音服务，需启动 `speaker` |
+| `/clock` | Gazebo simulation time. |
+| `/robot_description` | The robot URDF description. |
+| `/joint_states` | Wheel joint states. |
+| `/cmd_vel` | `geometry_msgs/msg/Twist` base velocity commands. |
+| `/odom` | `nav_msgs/msg/Odometry` base odometry. |
+| `/scan` | `sensor_msgs/msg/LaserScan` planar laser scans. |
+| `/imu` | IMU data. |
+| `/map` | A `nav_msgs/msg/OccupancyGrid` map. |
+| `/amcl_pose` | AMCL localization estimates. |
+| `/camera_sensor/image_raw` | RGB images used for patrol image capture. |
+| `/camera_sensor/depth/image_raw` | Depth images; confirm the actual topic with `topic list -t`. |
+| `/camera_sensor/points` | Depth camera point clouds. |
+| `/navigate_to_pose` | Single-goal navigation action. |
+| `/follow_waypoints` | Waypoint navigation action. |
+| `/speech_text` | Speech service provided by `speaker`. |
 
-主要 TF 链为 `map → odom → base_footprint → base_link → 传感器坐标系`。AMCL 或 SLAM 提供 `map → odom`，底盘提供 `odom → base_footprint`，机器人状态发布器提供模型内部变换。
+The main TF chain is `map → odom → base_footprint → base_link → sensor frames`. AMCL or SLAM provides `map → odom`, the base controller provides `odom → base_footprint`, and the robot state publisher provides the model's internal transforms.
 
-## 9. 参数修改与排查
+## 9. Configuration and Troubleshooting
 
-### 9.1 常改配置
+### 9.1 Common Configuration Files
 
-| 文件 | 常改内容 |
+| File | Settings |
 | --- | --- |
-| `fishbot_navigation2/config/nav2_params.yaml` | AMCL、规划器、DWB 控制器、代价地图、目标容差 |
-| `fishbot_navigation2/maps/room.yaml` | 地图图像路径、分辨率、原点 |
-| `fishbot_description/config/fishbot_ros2_controller.yaml` | 轮距、轮半径、里程计、速度命令超时 |
-| `fishbot_description/urdf/fishbot/` | 底盘、轮子、传感器和 Gazebo 插件 |
-| `fishbot_description/world/custom_room.world` | 房间和障碍物 |
-| `autopartol_robot/config/partol_config.yaml` | 原有巡逻入口读取的路线和初始位置 |
+| `fishbot_navigation2/config/nav2_params.yaml` | AMCL, planning, the DWB controller, costmaps, and goal tolerances. |
+| `fishbot_navigation2/maps/room.yaml` | Map image path, resolution, and origin. |
+| `fishbot_description/config/fishbot_ros2_controller.yaml` | Wheel separation, wheel radius, odometry, and command timeout. |
+| `fishbot_description/urdf/fishbot/` | Base, wheels, sensors, and Gazebo plugins. |
+| `fishbot_description/world/custom_room.world` | The room and obstacles. |
+| `autopartol_robot/config/partol_config.yaml` | Route and initial pose used by the original patrol launch. |
 
-当前底盘轮距为 0.20 m、轮半径为 0.032 m；Nav2 配置的最大前进速度为 0.26 m/s，目标位置和朝向容差均为 0.15（m / rad）。模型、控制器与导航参数应保持一致。底盘当前使用 `open_loop: true` 计算里程计。
+The base uses a 0.20 m wheel separation and a 0.032 m wheel radius. Nav2's configured maximum forward speed is 0.26 m/s; position and heading tolerances are 0.15 m and 0.15 rad. Keep the model, controller, and navigation parameters consistent. The base currently computes odometry with `open_loop: true`.
 
-### 9.2 常用检查命令
+### 9.2 Inspection Commands
 
 ```bash
 bash scripts/navigation.sh ros2 node list
@@ -460,45 +460,47 @@ bash scripts/navigation.sh ros2 lifecycle get /bt_navigator
 bash scripts/navigation.sh ros2 action list -t
 ```
 
-`topic hz` 会持续运行，按 `Ctrl+C` 结束该检查。确认所有终端使用同一个 `ROS_DOMAIN_ID`。
+`topic hz` runs until you press `Ctrl+C`. Use the same `ROS_DOMAIN_ID` in all terminals.
 
-### 9.3 常见现象
+### 9.3 Common Issues
 
-| 现象 | 检查或处理 |
+| Symptom | What to check |
 | --- | --- |
-| `ros2` 找不到，或加载到 Foxy | 使用包装脚本；自定义环境位置时设置 `PATROL_CONDA_PREFIX` |
-| `option --editable not recognized` | 检查当前环境的 setuptools，使用配置中的 `<80` 版本 |
-| CMake 提示旧策略不兼容 | 使用 README 中带 `-DCMAKE_POLICY_VERSION_MINIMUM=3.5` 的构建命令 |
-| 初始出现 `odom` / `map` TF 等待信息 | 等待机器人和底盘控制器激活，再设置初始定位 |
-| Nav2 一直未就绪 | 检查 `/clock`、`/scan`、`/odom` 和 `map → base_footprint`；全局代价地图需要定位后才能完成启动 |
-| 机器人或激光在 RViz 中位置不正确 | 检查 Fixed Frame、初始定位、地图是否对应当前世界，以及各节点的 `use_sim_time` |
-| 模型重复、实体已存在、Gazebo 端口被占用 | 返回原启动终端停止旧实例，再启动一套 `demo` |
-| `model://cafe_table/...` 或 `No mesh specified` | 房间文件引用的桌子外观网格未随仓库提供；桌子视觉可能不完整 |
-| 找不到 `ros2 control` | 该命令行扩展是可选依赖；本项目使用 `controller_manager/spawner` 加载底盘 |
-| 巡逻一直等待语音服务 | 检查两个巡逻包是否编译、`espeakng` 是否安装、`speaker` 是否运行 |
-| 提示拍照完成但没有图片 | 检查相机话题、目录是否存在、路径末尾 `/` 和写入权限 |
-| 示例程序访问反馈字段时报 `NoneType` | 示例直接读取反馈字段；可先使用第 3 节的 Action 命令或自动检查脚本验证导航 |
-| 关闭时 Nav2 容器未及时退出 | 组合节点关闭超时时，launch 会继续发送终止信号；等待启动终端结束后再重开 |
+| `ros2` is missing or Foxy is loaded | Use the wrapper and check the `conda_root` and `patrol_env` paths at the top of the script. |
+| `option --editable not recognized` | Check setuptools in the project environment and use the configured `<80` version. |
+| CMake rejects an old policy version | Use the build command with `-DCMAKE_POLICY_VERSION_MINIMUM=3.5` from this guide. |
+| Startup waits for `odom` or `map` transforms | Wait for the robot and controllers to activate, then initialize localization. |
+| Nav2 does not become ready | Check `/clock`, `/scan`, `/odom`, and `map → base_footprint`; the global costmap needs localization before activation can finish. |
+| The robot or scans appear in the wrong place | Check Fixed Frame, the initial pose, whether the map matches the world, and `use_sim_time`. |
+| Duplicate models, an existing entity, or a busy Gazebo port | Stop the previous launch in its terminal, then start one `demo` instance. |
+| `model://cafe_table/...` or `No mesh specified` | The table's visual mesh is not included in the repository, so its appearance may be incomplete. |
+| `ros2 control` is unavailable | That CLI extension is optional. This project loads the base controllers with `controller_manager/spawner`. |
+| Patrol waits for the speech service | Check that both patrol packages were built, `espeakng` is installed, and `speaker` is running. |
+| An image capture announcement produces no file | Check the camera topic, directory existence, trailing `/`, and write permission. |
+| An example raises `NoneType` while reading feedback | The examples access feedback fields directly. Use the action command or automated check in Section 3 to verify navigation first. |
+| The Nav2 container does not stop immediately | Launch escalates termination signals if composed nodes time out. Wait for the launch terminal to finish before restarting. |
 
-## 10. 项目结构与入口
+## 10. Project Layout and Entry Points
 
 ```text
 ROS2_PARTOL_ROBOT/
-├── environment.navigation.yml       # Humble Conda 导航依赖
+├── environment.navigation.yml       # Humble Conda navigation dependencies
 ├── scripts/
-│   ├── navigation.sh                # 环境、构建和运行包装脚本
-│   └── check_navigation.py          # 自动导航检查与 JSON 报告
-├── fishbot_description/             # URDF、传感器、控制器和 Gazebo 世界
-├── fishbot_navigation2/             # Nav2 配置、地图和启动文件
-├── fishbot_application/             # 初始定位、位姿查询、单点/多点示例
-├── autopartol_interfaces/           # SpeechText 自定义服务
-├── autopartol_robot/                # 循环巡逻、语音和到点拍照
-├── docs/images/                     # 项目展示图片
-└── log/                             # 本地日志、报告与示例输出（生成目录）
+│   ├── navigation.sh                # Environment, build, and launch wrapper
+│   └── check_navigation.py          # Navigation check and JSON report
+├── fishbot_description/             # URDF, sensors, controllers, and Gazebo world
+├── fishbot_navigation2/             # Nav2 parameters, maps, and launch files
+├── fishbot_application/             # Localization, pose lookup, and navigation examples
+├── autopartol_interfaces/           # Custom SpeechText service
+├── autopartol_robot/                # Repeated patrols, speech, and image capture
+├── docs/
+│   ├── USAGE.md                     # Installation and operating instructions
+│   └── images/                      # Screenshots and animated preview
+└── log/                             # Generated logs, reports, and example output
 ```
 
-包名 `autopartol_*` 和文件名 `partol_*` 沿用原项目拼写。机器人模型可直接在 Gazebo 与导航 RViz 中查看；旧的 `display_robot.launch.py` 是早期独立模型示例，其 RViz 配置引用 `display_model.rviz`，实际文件名为 `dispaly_model.rviz`，且需要额外安装 `joint_state_publisher` 后修正路径再使用。
+The package names `autopartol_*` and filenames `partol_*` preserve the original spelling. View the robot model in Gazebo and the navigation RViz window. The older `display_robot.launch.py` is a standalone model example: it references `display_model.rviz`, while the actual file is named `dispaly_model.rviz`. Install `joint_state_publisher` and correct that path before using this example.
 
-## 致谢
+## Acknowledgements
 
-本项目基于 [fishros / FishBot](https://github.com/fishros) 的教育材料扩展。环境安装参考 [RoboStack 文档](https://robostack.github.io/GettingStarted.html)，导航与建图配置参考 [Nav2 文档](https://docs.nav2.org/)。
+This project builds on educational materials from [fishros / FishBot](https://github.com/fishros). Environment setup follows the [RoboStack documentation](https://robostack.github.io/GettingStarted.html), and navigation and mapping configuration follow the [Nav2 documentation](https://docs.nav2.org/).
